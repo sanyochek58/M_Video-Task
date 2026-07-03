@@ -1,18 +1,31 @@
 package com.example.parser
 
+import com.example.model.Operation
 import java.io.File
 
 object CsvParser {
 
-    val file: File = File("src/main/resources/info.csv")
+    fun parse(file: File): List<Operation> {
+        return file.readLines()
+            .map { it.trim() }
+            .filter{ it.isNotBlank() }
+            .map { line -> parseLine(line) }
+    }
 
-    fun parse(): String{
-        val lines: List<String> = file.readLines()
+    private fun parseLine(line: String): Operation {
+        val parts = line.split(";")
+        return when(parts.size){
+            3 -> Operation.Supply(
+                groupId = parts[0],
+                productId = parts[1],
+                quantity = parts[2].toInt())
 
-        for (line in lines) {
-            println(line)
+            2 -> Operation.Sale(
+                groupId = parts[0],
+                quantity = parts[1].toInt()
+            )
+
+            else -> throw IllegalArgumentException("Некорректная строка $line")
         }
-
-        return lines.joinToString("\n")
     }
 }
