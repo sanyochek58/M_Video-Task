@@ -22,8 +22,10 @@ class InventoryService{
         val existing = stocks.find {it.groupId == operation.groupId && it.productId == operation.productId}
         if (existing != null) {
             existing.quantity += operation.quantity
+            log.debug("Поступление '{}/{}': +{}, итого {}", operation.groupId, operation.productId, operation.quantity, existing.quantity)
         }else{
             stocks.add(Stock(operation.groupId, operation.productId, operation.quantity))
+            log.debug("Новая позиция '{}/{}': {}", operation.groupId, operation.productId, operation.quantity)
         }
     }
 
@@ -32,10 +34,12 @@ class InventoryService{
             .filter { it.groupId == operation.groupId }
             .sortedBy { it.productId }
 
-        if (groupProducts.isNotEmpty()) {
+        if (groupProducts.isEmpty()) {
             log.warn("Продажа по группе '{}' без остатков — операция пропущена", operation.groupId)
             return
         }
+
+        log.debug("Продажа по группе '{}' на {} ед.", operation.groupId, operation.quantity)
 
         var remaining = operation.quantity
         for (stock in groupProducts) {
@@ -54,4 +58,6 @@ class InventoryService{
             last.quantity -= remaining
         }
     }
+
+    fun result(): List<Stock> = stocks
 }
